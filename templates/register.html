@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Đăng ký{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <div class="card mt-5">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Đăng ký</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Mật khẩu</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="agree_terms" name="agree_terms" required>
+                        <label class="form-check-label" for="agree_terms">
+                            Tôi đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Điều khoản sử dụng</a>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Đăng ký</button>
+                </form>
+                <hr>
+                <p class="text-center">Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Điều khoản sử dụng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h5>1. Chấp nhận điều khoản</h5>
+                <p>Bằng cách sử dụng OceanChat, bạn đồng ý với các điều khoản này.</p>
+                <h5>2. Hành vi người dùng</h5>
+                <p>Bạn không được quấy rối, gửi thư rác hoặc lạm dụng người dùng khác.</p>
+                <h5>3. Quyền riêng tư</h5>
+                <p>Dữ liệu của bạn được bảo vệ theo chính sách riêng tư.</p>
+                <h5>4. Nội dung</h5>
+                <p>Bạn chịu trách nhiệm về mọi nội dung bạn chia sẻ.</p>
+                <h5>5. Chấm dứt</h5>
+                <p>Chúng tôi có quyền đình chỉ tài khoản vi phạm điều khoản.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

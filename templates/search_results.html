@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Kết quả tìm kiếm: {{ query }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h4><i class="fas fa-search"></i> Kết quả cho "{{ query }}"</h4>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Người dùng</div>
+                <ul class="list-group list-group-flush">
+                    {% for u in users %}
+                    <li class="list-group-item d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='avatars/' + u.avatar) }}" width="40" height="40" class="rounded-circle me-3" style="object-fit: cover;">
+                        <a href="{{ url_for('profile', username=u.username) }}" class="text-decoration-none">{{ u.username }}</a>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted">Không tìm thấy người dùng</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Nhóm / Kênh</div>
+                <ul class="list-group list-group-flush">
+                    {% for g in groups %}
+                    <li class="list-group-item">
+                        <i class="fas fa-{% if g.chat_type == 'group' %}users{% else %}bullhorn{% endif %} me-2"></i>
+                        <a href="{{ url_for('chat_room', chat_id=g.id) }}">{{ g.name }}</a>
+                        <span class="badge bg-secondary">{{ g.chat_type }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted">Không tìm thấy nhóm</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

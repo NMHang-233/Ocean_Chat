@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Chỉnh sửa hồ sơ{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-user-edit"></i> Chỉnh sửa thông tin</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 text-center">
+                        <label>Ảnh đại diện</label><br>
+                        <img src="{{ url_for('static', filename='avatars/' + current_user.avatar) }}" width="80" height="80" class="rounded-circle mb-2" style="object-fit: cover;">
+                        <form action="{{ url_for('upload_avatar') }}" method="POST" enctype="multipart/form-data" class="mt-2">
+                            <input type="file" name="avatar" class="form-control-sm" accept="image/*" required>
+                            <button type="submit" class="btn btn-sm btn-secondary">Tải lên</button>
+                        </form>
+                    </div>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label>Ngày sinh</label>
+                            <input type="date" name="birthday" class="form-control" value="{{ current_user.birthday.strftime('%Y-%m-%d') if current_user.birthday else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label>Quê quán</label>
+                            <input type="text" name="hometown" class="form-control" value="{{ current_user.hometown or '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label>Sở thích</label>
+                            <input type="text" name="interests" class="form-control" value="{{ current_user.interests or '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label>Tiểu sử</label>
+                            <textarea name="bio" class="form-control" rows="3">{{ current_user.bio or '' }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

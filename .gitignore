@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+instance/
+*.pyc
+.DS_Store
+static/uploads/
+static/avatars/   (vì có thể có ảnh của người dùng)
+.env

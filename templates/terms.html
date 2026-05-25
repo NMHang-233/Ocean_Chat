@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Chấp nhận điều khoản{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card mt-5">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-file-contract"></i> Điều khoản dịch vụ</h4>
+            </div>
+            <div class="card-body">
+                <h5>Xin chào {{ username }}!</h5>
+                <p>Vui lòng đọc và chấp nhận điều khoản để tiếp tục:</p>
+                
+                <div class="border p-3 mb-3" style="max-height: 400px; overflow-y: auto;">
+                    <h5>1. Chấp nhận điều khoản</h5>
+                    <p>Bằng cách sử dụng OceanChat, bạn đồng ý với các điều khoản này.</p>
+                    <h5>2. Hành vi người dùng</h5>
+                    <p>Bạn không được quấy rối, gửi thư rác hoặc lạm dụng người dùng khác.</p>
+                    <h5>3. Quyền riêng tư</h5>
+                    <p>Dữ liệu của bạn được bảo vệ theo chính sách riêng tư.</p>
+                    <h5>4. Nội dung</h5>
+                    <p>Bạn chịu trách nhiệm về mọi nội dung bạn chia sẻ.</p>
+                    <h5>5. Chấm dứt</h5>
+                    <p>Chúng tôi có quyền đình chỉ tài khoản vi phạm điều khoản.</p>
+                </div>
+                
+                <form method="POST">
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="accept" value="yes" class="btn btn-success">
+                            <i class="fas fa-check"></i> Tôi đồng ý với điều khoản
+                        </button>
+                        <button type="submit" name="accept" value="no" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Tôi từ chối
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

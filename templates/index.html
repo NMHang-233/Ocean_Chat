@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Phòng chat của tôi{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-comments"></i> Phòng chat của bạn</h5>
+            </div>
+            <div class="list-group list-group-flush" id="chat-list">
+                {% for item in chats %}
+                <a href="{{ url_for('chat_room', chat_id=item.chat.id) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-{% if item.chat.chat_type == 'private' %}user{% elif item.chat.chat_type == 'group' %}users{% else %}bullhorn{% endif %} me-2"></i>
+                            <strong>{{ item.name }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                {% if item.last_message %}
+                                    {{ item.last_message.content[:30] }}
+                                {% else %}
+                                    Chưa có tin nhắn
+                                {% endif %}
+                            </small>
+                        </div>
+                        <span class="badge bg-secondary">{{ item.chat.chat_type }}</span>
+                    </div>
+                </a>
+                {% else %}
+                <div class="list-group-item text-center text-muted">
+                    Chưa có phòng chat nào. Hãy tạo bên dưới!
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Tạo phòng chat mới</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="chatTypeTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="private-tab" data-bs-toggle="tab" data-bs-target="#private" type="button" role="tab">Chat riêng (1:1)</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="group-tab" data-bs-toggle="tab" data-bs-target="#group" type="button" role="tab">Nhóm chat (N:N)</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="channel-tab" data-bs-toggle="tab" data-bs-target="#channel" type="button" role="tab">Kênh (Admin nhắn)</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content mt-3">
+                    <div class="tab-pane fade show active" id="private" role="tabpanel">
+                        <form method="POST" action="{{ url_for('create_chat') }}">
+                            <input type="hidden" name="type" value="private">
+                            <div class="mb-3">
+                                <label for="other_username" class="form-label">Tên người dùng</label>
+                                <input type="text" class="form-control" id="other_username" name="other_username" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Bắt đầu chat riêng</button>
+                        </form>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="group" role="tabpanel">
+                        <form method="POST" action="{{ url_for('create_chat') }}" id="groupForm">
+                            <input type="hidden" name="type" value="group">
+                            <div class="mb-3">
+                                <label for="group_name" class="form-label">Tên nhóm</label>
+                                <input type="text" class="form-control" id="group_name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="group_members" class="form-label">Thêm thành viên</label>
+                                <select class="form-select" id="group_members" name="members" multiple size="5"></select>
+                                <small class="text-muted">Giữ Ctrl để chọn nhiều người</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Tạo nhóm</button>
+                        </form>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="channel" role="tabpanel">
+                        <form method="POST" action="{{ url_for('create_chat') }}" id="channelForm">
+                            <input type="hidden" name="type" value="channel">
+                            <div class="mb-3">
+                                <label for="channel_name" class="form-label">Tên kênh</label>
+                                <input type="text" class="form-control" id="channel_name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="channel_members" class="form-label">Thêm thành viên (chỉ đọc)</label>
+                                <select class="form-select" id="channel_members" name="members" multiple size="5"></select>
+                                <small class="text-muted">Chỉ bạn (Admin) mới gửi được tin nhắn</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Tạo kênh</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    function loadUsers(selectId) {
+        $.get('/search_users?q=', function(data) {
+            let select = $(selectId);
+            select.empty();
+            $.each(data, function(i, user) {
+                select.append($('<option>', {
+                    value: user.id,
+                    text: user.username
+                }));
+            });
+        });
+    }
+    loadUsers('#group_members');
+    loadUsers('#channel_members');
+});
+</script>
+{% endblock %}
