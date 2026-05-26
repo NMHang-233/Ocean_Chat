@@ -153,7 +153,19 @@ $('#fileInput').change(function() {
             processData: false,
             contentType: false,
             success: function(res) {
-                if (!res.success) alert('Upload thất bại');
+                if (!res.success) {
+                    alert(res.error || 'Upload thất bại');
+                }
+            },
+            error: function(xhr) {
+                let message = 'Upload thất bại';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    message = response.error || response.message || message;
+                } catch (e) {
+                    console.error('Upload lỗi không xác định:', xhr.responseText);
+                }
+                alert(message);
             }
         });
     }

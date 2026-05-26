@@ -253,15 +253,15 @@ def create_chat():
 @login_required
 def upload_file():
     if 'file' not in request.files:
-        return jsonify({'error': 'No file'}), 400
-    file = request.files['file']
+        return jsonify({'success': False, 'error': 'Không tìm thấy file gửi lên.'}), 400
+    file = request.files.get('file')
     chat_id = request.form.get('chat_id')
     
-    if file.filename == '':
-        return jsonify({'error': 'Empty filename'}), 400
+    if not file or file.filename == '':
+        return jsonify({'success': False, 'error': 'Tên file trống hoặc file không hợp lệ.'}), 400
     
     if not allowed_file(file.filename):
-        return jsonify({'error': 'File type not allowed'}), 400
+        return jsonify({'success': False, 'error': 'Định dạng file không cho phép.'}), 400
     
     filename = secure_filename(file.filename)
     name, ext = os.path.splitext(filename)
@@ -269,7 +269,11 @@ def upload_file():
     filename = f"{int(time.time())}_{name}{ext}"
     
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
+    try:
+        file.save(filepath)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Lỗi lưu file: {str(e)}'}), 500
+    
     file_url = url_for('static', filename=f'uploads/{filename}')
     
     ext = filename.rsplit('.', 1)[1].lower()
