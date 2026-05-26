@@ -246,7 +246,39 @@ socket.on('reaction_update', function(data) {
 });
 
 let localStream = null;
+let remoteStream = null;
+let pendingIceCandidates = [];
+let peerConnection = null;
 let isVideoCall = false;
+let targetCallUserId = null;
+
+function createPeerConnection() {
+    const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    peerConnection = new RTCPeerConnection(configuration);
+
+    peerConnection.ontrack = event => {
+        remoteStream = event.streams[0] || new MediaStream([event.track]);
+        const remoteVideoEl = document.getElementById('remoteVideo');
+        const remoteAudioEl = document.getElementById('remoteAudio');
+        remoteVideoEl.srcObject = remoteStream;
+        remoteAudioEl.srcObject = remoteStream;
+        remoteAudioEl.volume = 1.0;
+        remoteVideoEl.play().catch(() => {});
+        remoteAudioEl.play().catch(() => {});
+    };
+
+    peerConnection.onicecandidate = event => {
+        if (event.candidate && targetCallUserId) {
+            socket.emit('ice_candidate', { target_user_id: targetCallUserId, candidate: event.candidate });
+        }
+    };
+
+    peerConnection.onconnectionstatechange = () => {
+        console.log('Peer connection state:', peerConnection.connectionState);
+    };
+
+    return peerConnection;
+}
 
 $(function() {
     $(document).on('click', '#voiceCallBtn, #videoCallBtn', function() {
@@ -289,25 +321,9 @@ async function startCall(videoEnabled) {
         remoteVideoEl.srcObject = remoteStream;
         remoteAudioEl.srcObject = remoteStream;
         
-        const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-        peerConnection = new RTCPeerConnection(configuration);
+        peerConnection = createPeerConnection();
         
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-        
-        peerConnection.ontrack = event => {
-            const stream = event.streams[0] || new MediaStream([event.track]);
-            remoteVideoEl.srcObject = stream;
-            remoteAudioEl.srcObject = stream;
-            remoteAudioEl.volume = 1.0;
-            remoteVideoEl.play().catch(() => {});
-            remoteAudioEl.play().catch(() => {});
-        };
-        
-        peerConnection.onicecandidate = event => {
-            if (event.candidate) {
-                socket.emit('ice_candidate', { target_user_id: targetCallUserId, candidate: event.candidate });
-            }
-        };
         
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
@@ -355,24 +371,8 @@ socket.on('call_offer', async (data) => {
         remoteVideoEl.srcObject = remoteStream;
         remoteAudioEl.srcObject = remoteStream;
         
-        const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-        peerConnection = new RTCPeerConnection(configuration);
+        peerConnection = createPeerConnection();
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-        
-        peerConnection.ontrack = event => {
-            const stream = event.streams[0] || new MediaStream([event.track]);
-            remoteVideoEl.srcObject = stream;
-            remoteAudioEl.srcObject = stream;
-            remoteAudioEl.volume = 1.0;
-            remoteVideoEl.play().catch(() => {});
-            remoteAudioEl.play().catch(() => {});
-        };
-        
-        peerConnection.onicecandidate = event => {
-            if (event.candidate) {
-                socket.emit('ice_candidate', { target_user_id: targetCallUserId, candidate: event.candidate });
-            }
-        };
         
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
         await applyPendingIceCandidates();
@@ -402,13 +402,21 @@ socket.on('ice_candidate', async (data) => {
 });
 
 $('#hangupBtn').click(() => {
-    if (peerConnection) peerConnection.close();
-    if (localStream) localStream.getTracks().forEach(track => track.stop());
-    if (remoteStream) remoteStream.getTracks().forEach(track => track.stop());
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+    if (remoteStream) {
+        remoteStream.getTracks().forEach(track => track.stop());
+        remoteStream = null;
+    }
     document.getElementById('localVideo').srcObject = null;
     document.getElementById('remoteVideo').srcObject = null;
     document.getElementById('remoteAudio').srcObject = null;
-    remoteStream = null;
     pendingIceCandidates = [];
     targetCallUserId = null;
     $('#callModal').modal('hide');
