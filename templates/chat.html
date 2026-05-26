@@ -256,7 +256,9 @@ async function startCall(videoEnabled) {
     
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: videoEnabled, audio: true });
-        document.getElementById('localVideo').srcObject = localStream;
+        const localVideoEl = document.getElementById('localVideo');
+        localVideoEl.srcObject = localStream;
+        localVideoEl.style.display = videoEnabled ? 'inline-block' : 'none';
         
         const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         peerConnection = new RTCPeerConnection(configuration);
@@ -275,7 +277,7 @@ async function startCall(videoEnabled) {
         
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
-        socket.emit('call_offer', { target_user_id: targetCallUserId, offer: offer });
+        socket.emit('call_offer', { target_user_id: targetCallUserId, offer: offer, video_enabled: videoEnabled });
         
     } catch (err) {
         console.error(err);
@@ -286,13 +288,16 @@ async function startCall(videoEnabled) {
 
 socket.on('call_offer', async (data) => {
     if (data.from_user_id === currentUserId) return;
+    const videoEnabled = data.video_enabled === true;
     if (confirm(`${data.from_username} đang gọi bạn. Chấp nhận?`)) {
         targetCallUserId = data.from_user_id;
         $('#callModal').modal('show');
-        $('#callModalTitle').text('Cuộc gọi đến');
+        $('#callModalTitle').text(videoEnabled ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
         
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        document.getElementById('localVideo').srcObject = localStream;
+        localStream = await navigator.mediaDevices.getUserMedia({ video: videoEnabled, audio: true });
+        const localVideoEl = document.getElementById('localVideo');
+        localVideoEl.srcObject = localStream;
+        localVideoEl.style.display = videoEnabled ? 'inline-block' : 'none';
         
         const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         peerConnection = new RTCPeerConnection(configuration);
