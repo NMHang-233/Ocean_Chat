@@ -109,10 +109,12 @@ const socket = io();
 const chatId = {{ chat.id }};
 const currentUserId = {{ current_user.id }};
 let peerConnection = null;
+let localStream = null;
 let remoteStream = null;
 let pendingIceCandidates = [];
 let callActive = false;
 let targetCallUserId = null;
+let isVideoCall = false;
 
 socket.emit('join', { chat_id: chatId });
 socket.emit('join_user_room');
@@ -244,13 +246,6 @@ socket.on('user_typing', function(data) {
 socket.on('reaction_update', function(data) {
     updateReactions(data.message_id, data.reactions);
 });
-
-let localStream = null;
-let remoteStream = null;
-let pendingIceCandidates = [];
-let peerConnection = null;
-let isVideoCall = false;
-let targetCallUserId = null;
 
 function createPeerConnection() {
     const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
