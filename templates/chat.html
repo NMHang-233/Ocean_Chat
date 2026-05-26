@@ -294,7 +294,10 @@ async function startCall(videoEnabled) {
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
         
         peerConnection.ontrack = event => {
-            event.streams.forEach(stream => stream.getTracks().forEach(track => remoteStream.addTrack(track)));
+            if (!remoteStream) {
+                remoteStream = new MediaStream();
+            }
+            remoteStream.addTrack(event.track);
             remoteVideoEl.srcObject = remoteStream;
             remoteAudioEl.srcObject = remoteStream;
             remoteVideoEl.play().catch(() => {});
@@ -344,7 +347,10 @@ socket.on('call_offer', async (data) => {
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
         
         peerConnection.ontrack = event => {
-            event.streams.forEach(stream => stream.getTracks().forEach(track => remoteStream.addTrack(track)));
+            if (!remoteStream) {
+                remoteStream = new MediaStream();
+            }
+            remoteStream.addTrack(event.track);
             remoteVideoEl.srcObject = remoteStream;
             remoteAudioEl.srcObject = remoteStream;
             remoteVideoEl.play().catch(() => {});

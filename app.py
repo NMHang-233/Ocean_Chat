@@ -467,6 +467,7 @@ def handle_call_offer(data):
     target_user_id = data['target_user_id']
     emit('call_offer', {
         'offer': data['offer'],
+        'video_enabled': data.get('video_enabled', False),
         'from_user_id': current_user.id,
         'from_username': current_user.username
     }, room=f'user_{target_user_id}')
