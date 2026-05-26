@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -28,11 +31,11 @@ def allowed_avatar(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_AVATAR_EXTENSIONS
 
 db.init_app(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-admin = Admin(app, name='OceanChat Admin', template_mode='bootstrap4')
+admin = Admin(app, name='OceanChat Admin')
 admin.add_view(UserAdminView(User, db.session))
 admin.add_view(ChatAdminView(Chat, db.session))
 admin.add_view(MessageAdminView(Message, db.session))
@@ -480,17 +483,42 @@ def handle_ice_candidate(data):
 def handle_join_user_room():
     join_room(f'user_{current_user.id}')
 
+with app.app_context():
+    db.create_all()
+    # Auto-create admin account
+    if not User.query.filter_by(username='admin').first():
+        admin_user = User(
+            username='admin',
+            password=generate_password_hash('admin123'),
+            is_admin=True,
+            agreed_terms=True,
+            avatar='default_avatar.png'
+        )
+        db.session.add(admin_user)
+        
+    # Auto-create user1 test account
+    if not User.query.filter_by(username='user1').first():
+        user1 = User(
+            username='user1',
+            password=generate_password_hash('user123'),
+            is_admin=False,
+            agreed_terms=True,
+            avatar='default_avatar.png'
+        )
+        db.session.add(user1)
+        
+    # Auto-create user2 test account
+    if not User.query.filter_by(username='user2').first():
+        user2 = User(
+            username='user2',
+            password=generate_password_hash('user123'),
+            is_admin=False,
+            agreed_terms=True,
+            avatar='default_avatar.png'
+        )
+        db.session.add(user2)
+        
+    db.session.commit()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        if not User.query.filter_by(username='admin').first():
-            admin_user = User(
-                username='admin',
-                password=generate_password_hash('admin123'),
-                is_admin=True,
-                agreed_terms=True,
-                avatar='default_avatar.png'
-            )
-            db.session.add(admin_user)
-            db.session.commit()
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)

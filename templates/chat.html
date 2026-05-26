@@ -207,7 +207,7 @@ socket.on('new_message', function(data) {
             </div>
         </div>
     `;
-    messagesDiv.append(msgHtml);
+    messagesDiv.insertAdjacentHTML('beforeend', msgHtml);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
