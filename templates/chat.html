@@ -14,10 +14,10 @@
                     {% endif %}
                 </div>
                 <div>
-                    <button class="btn btn-sm btn-outline-light" id="voiceCallBtn" data-chat-id="{{ chat.id }}">
+                    <button type="button" class="btn btn-sm btn-outline-light" id="voiceCallBtn" data-chat-id="{{ chat.id }}">
                         <i class="fas fa-phone"></i> Gọi thoại
                     </button>
-                    <button class="btn btn-sm btn-outline-light" id="videoCallBtn" data-chat-id="{{ chat.id }}">
+                    <button type="button" class="btn btn-sm btn-outline-light" id="videoCallBtn" data-chat-id="{{ chat.id }}">
                         <i class="fas fa-video"></i> Gọi video
                     </button>
                 </div>
@@ -245,25 +245,27 @@ socket.on('reaction_update', function(data) {
 let localStream = null;
 let isVideoCall = false;
 
-$('#voiceCallBtn, #videoCallBtn').click(function() {
-    isVideoCall = $(this).attr('id') === 'videoCallBtn';
-    const members = {{ members | tojson }};
-    const otherMembers = members.filter(m => m.id !== currentUserId);
-    if (otherMembers.length === 0) {
-        alert('Không có thành viên nào khác để gọi');
-        return;
-    }
-    if (otherMembers.length === 1) {
-        targetCallUserId = otherMembers[0].id;
-        startCall(isVideoCall);
-    } else {
-        let memberList = otherMembers.map(m => `${m.username} (id:${m.id})`).join(', ');
-        let selected = prompt(`Chọn ID người dùng để gọi:\n${memberList}`);
-        if (selected) {
-            targetCallUserId = parseInt(selected);
-            startCall(isVideoCall);
+$(function() {
+    $(document).on('click', '#voiceCallBtn, #videoCallBtn', function() {
+        isVideoCall = $(this).attr('id') === 'videoCallBtn';
+        const members = {{ members | tojson }};
+        const otherMembers = members.filter(m => m.id !== currentUserId);
+        if (otherMembers.length === 0) {
+            alert('Không có thành viên nào khác để gọi');
+            return;
         }
-    }
+        if (otherMembers.length === 1) {
+            targetCallUserId = otherMembers[0].id;
+            startCall(isVideoCall);
+        } else {
+            let memberList = otherMembers.map(m => `${m.username} (id:${m.id})`).join(', ');
+            let selected = prompt(`Chọn ID người dùng để gọi:\n${memberList}`);
+            if (selected) {
+                targetCallUserId = parseInt(selected);
+                startCall(isVideoCall);
+            }
+        }
+    });
 });
 
 async function startCall(videoEnabled) {
