@@ -110,6 +110,7 @@ const chatId = {{ chat.id }};
 const currentUserId = {{ current_user.id }};
 let peerConnection = null;
 let remoteStream = null;
+let pendingIceCandidates = [];
 let callActive = false;
 let targetCallUserId = null;
 
@@ -321,6 +322,20 @@ async function startCall(videoEnabled) {
     }
 }
 
+async function applyPendingIceCandidates() {
+    if (!peerConnection || !peerConnection.remoteDescription || !peerConnection.remoteDescription.type) {
+        return;
+    }
+    while (pendingIceCandidates.length) {
+        const candidate = pendingIceCandidates.shift();
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) {
+            console.error('Không thêm được ICE candidate:', e);
+        }
+    }
+}
+
 socket.on('call_offer', async (data) => {
     if (data.from_user_id === currentUserId) return;
     const videoEnabled = data.video_enabled === true;
@@ -364,6 +379,7 @@ socket.on('call_offer', async (data) => {
         };
         
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        await applyPendingIceCandidates();
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
         socket.emit('call_answer', { target_user_id: targetCallUserId, answer: answer });
@@ -373,12 +389,19 @@ socket.on('call_offer', async (data) => {
 socket.on('call_answer', async (data) => {
     if (data.from_user_id !== targetCallUserId) return;
     await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    await applyPendingIceCandidates();
 });
 
 socket.on('ice_candidate', async (data) => {
     if (data.from_user_id !== targetCallUserId) return;
-    if (peerConnection) {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+    if (peerConnection && peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (e) {
+            console.error('Lỗi addIceCandidate:', e);
+        }
+    } else {
+        pendingIceCandidates.push(data.candidate);
     }
 });
 
@@ -390,6 +413,8 @@ $('#hangupBtn').click(() => {
     document.getElementById('remoteVideo').srcObject = null;
     document.getElementById('remoteAudio').srcObject = null;
     remoteStream = null;
+    pendingIceCandidates = [];
+    targetCallUserId = null;
     $('#callModal').modal('hide');
     callActive = false;
 });
